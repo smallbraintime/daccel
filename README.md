@@ -1,2 +1,2 @@
 # daccel
-a simple download accelerator
+a simple http download accelerator
