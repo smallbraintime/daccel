@@ -87,25 +87,7 @@ func download(url string, destFile *os.File) error {
 	return nil
 }
 
-func main() {
-	sourceUrl := ""
-	destPath := ""
-
-	args := os.Args
-	switch len(args) {
-	case 1:
-		fmt.Println("daccel 0.1")
-		fmt.Println("Usage: daccel <url> [dest]")
-		return
-	case 2:
-		sourceUrl = args[1]
-	case 3:
-		sourceUrl = args[1]
-		destPath = args[2]
-	default:
-		log.Fatal(errors.New("invalid arguments"))
-	}
-
+func createFile(sourceUrl, destPath string) *os.File {
 	u, err := url.Parse(sourceUrl)
 	if err != nil {
 		log.Fatal(err)
@@ -114,7 +96,6 @@ func main() {
 	fileName := filepath.Base(u.Path)
 
 	var file *os.File
-	defer file.Close()
 	if destPath == "" {
 		destPath, err = os.Getwd()
 		file, err = os.Create(destPath + "/" + fileName)
@@ -132,11 +113,42 @@ func main() {
 		}
 	}
 
+	return file
+}
+
+func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("an error occured while downloading")
+		}
+	}()
+
+	sourceUrl := ""
+	destPath := ""
+
+	args := os.Args
+	switch len(args) {
+	case 1:
+		fmt.Println("daccel 0.1")
+		fmt.Println("Usage: daccel <url> [dest]")
+		return
+	case 2:
+		sourceUrl = args[1]
+	case 3:
+		sourceUrl = args[1]
+		destPath = args[2]
+	default:
+		fmt.Println(errors.New("invalid arguments"))
+	}
+
+	file := createFile(sourceUrl, destPath)
+	defer file.Close()
+
 	now := time.Now()
 	start := now.Unix()
 
 	fmt.Println("downloading...")
-	err = download(sourceUrl, file)
+	err := download(sourceUrl, file)
 
 	now = time.Now()
 	stop := now.Unix()
@@ -144,6 +156,6 @@ func main() {
 	fmt.Println("finished in downloading in ", stop-start, " seconds")
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("failed to connect")
 	}
 }
